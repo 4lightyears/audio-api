@@ -6,7 +6,7 @@ from extensions import db
 
 from config import Config
 
-from resources.audio import AudioListResource, GetAudioResource
+from resources.audio import AudioListResource, GetAudioResource, DeleteAudioResource, UpdateAudioResource
 
 def create_app():
 	app = Flask(__name__)
@@ -25,7 +25,9 @@ def register_resource(app):
 	api = Api(app)
 
 	api.add_resource(AudioListResource, '/audio')
-	api.add_resource(GetAudioResource, '/<string:audioType>', '/<string:audioType>/<int:audio_id>', endpoint='aud')
+	api.add_resource(GetAudioResource, '/<string:audioType>', '/<string:audioType>/<int:audio_id>', endpoint='get')
+	api.add_resource(DeleteAudioResource, '/<string:audioType>/<int:audio_id>')
+	api.add_resource(UpdateAudioResource, '/<string:audioType>', '/<string:audioType>/<int:audio_id>', endpoint='update')
 
 if __name__ == '__main__':
     app = create_app()

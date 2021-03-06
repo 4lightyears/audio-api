@@ -8,7 +8,7 @@ from models.audio import SongModel, PodcastModel, AudiobookModel, db
 from schemas.audio import SongSchema, PodcastSchema, AudioBookSchema 
 
 song_schema = SongSchema()
-podcast_schema = PodcastSchema(many=True)
+podcast_schema = PodcastSchema()
 audiobook_schema = AudioBookSchema()
 
 class AudioListResource(Resource):
@@ -48,7 +48,7 @@ class AudioListResource(Resource):
 			)
 
 		else:
-			return {}, HTTPStatus.BAD_REQUEST
+			return {'message':'BAD REQUEST'}, HTTPStatus.BAD_REQUEST
 		audio_data.save()
 
 		return {"message": "OK"}, HTTPStatus.OK
@@ -60,15 +60,15 @@ class GetAudioResource(Resource):
 		if audio_id is None:
 			if audioType == 'Song':
 				query_data = SongModel.get_all()
-				jsonified_data = song_schema.dump(query_data)
+				jsonified_data = song_schema.dump(query_data, many=True)
 			elif audioType == 'Podcast':
 				query_data = PodcastModel.get_all()
-				jsonified_data = podcast_schema.dump(query_data)
+				jsonified_data = podcast_schema.dump(query_data, many=True)
 			elif audioType == 'Audiobook':
 				query_data = AudiobookModel.get_all()
-				jsonified_data = audiobook_schema.dump(query_data)
+				jsonified_data = audiobook_schema.dump(query_data, many=True)
 			else:
-				return {}, HTTPStatus.BAD_REQUEST
+				return {'message':'BAD REQUEST'}, HTTPStatus.BAD_REQUEST
 
 			return jsonified_data, HTTPStatus.OK
 
@@ -83,8 +83,72 @@ class GetAudioResource(Resource):
 				query_data = AudiobookModel.get_by_id(audio_id)
 				jsonified_data = audiobook_schema.dump(query_data)
 			else:
-				return {}, HTTPStatus.BAD_REQUEST
+				return {'message':'BAD REQUEST'}, HTTPStatus.BAD_REQUEST
 
 			return jsonified_data, HTTPStatus.OK
 
-		return {}, HTTPStatus.BAD_REQUEST
+		return {'message':'BAD REQUEST'}, HTTPStatus.BAD_REQUEST
+
+
+class DeleteAudioResource(Resource):
+	def delete(self, audio_id):
+		audioType = audioType.capitalize()
+		audio_id = audio_id
+		if audioType == 'Song':
+			audio = SongModel.get_by_id(audio_id)
+			if audio is None:
+				return {'message': 'Enter a valid id'}, HTTPStatus.BAD_REQUEST
+
+		elif audioType == 'Podcast':
+			audio = PodcastModel.get_by_id(audio_id)
+			if audio is None:
+				return {'message': 'Enter a valid id'}, HTTPStatus.BAD_REQUEST
+
+		elif audioType == 'Audiobook':
+			audio = AudiobookModel.get_by_id(audio_id)
+			if audio is None:
+				return {'message': 'Enter a valid id'}, HTTPStatus.BAD_REQUEST
+
+		else:
+			return {'message':'BAD REQUEST'}, HTTPStatus.BAD_REQUEST
+
+		audio.remove()
+
+		return {"message": "deleted."}, HTTPStatus.OK
+
+class UpdateAudioResource(Resource):
+	def put(self, audioType, audio_id=None):
+		audioType = audioType.capitalize()
+		audio_id = audio_id
+		json_data = request.get_json()
+		if audioType == 'Song':
+			audio = SongModel.get_by_id(audio_id)
+			if audio is None:
+				return {'message': 'Enter a valid id'}, HTTPStatus.BAD_REQUEST
+
+			audio.name = json_data['name']
+			audio.duration_seconds = json_data['duration_seconds']
+
+		elif audioType == 'Podcast':
+			audio = PodcastModel.get_by_id(audio_id)
+			if audio is None:
+				return {'message': 'Enter a valid id'}, HTTPStatus.BAD_REQUEST
+
+			audio.name = json_data['name']
+			audio.duration_seconds = json_data['duration_seconds']
+			audio.host = json_data['host']
+			audio.participants = json_data['participants']
+
+		elif audioType == 'Audiobook':
+			audio = AudiobookModel.get_by_id(audio_id)
+			if audio is None:
+				return {'message': 'Enter a valid id'}, HTTPStatus.BAD_REQUEST
+
+			audio.title = json_data['title']
+			audio.author = json_data['author']
+			audio.narrator = json_data['narrator']
+			audio.duration_seconds = json_data['duration_seconds']
+
+		audio.save()
+
+		return {"message": "updated"}, HTTPStatus.OK

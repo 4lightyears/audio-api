@@ -1,9 +1,15 @@
 from flask_restful import Resource
 from flask import request, jsonify
 from http import HTTPStatus
-import json
+
 
 from models.audio import SongModel, PodcastModel, AudiobookModel, db
+
+from schemas.audio import SongSchema, PodcastSchema, AudioBookSchema 
+
+song_schema = SongSchema()
+podcast_schema = PodcastSchema(many=True)
+audiobook_schema = AudioBookSchema()
 
 class AudioListResource(Resource):
 	def post(self):
@@ -50,28 +56,35 @@ class AudioListResource(Resource):
 class GetAudioResource(Resource):
 	def get(get, audioType, audio_id=None):
 		audioType = audioType.capitalize()
+		audio_id = audio_id
 		if audio_id is None:
 			if audioType == 'Song':
-				data = SongModel.get_all()
+				query_data = SongModel.get_all()
+				jsonified_data = song_schema.dump(query_data)
 			elif audioType == 'Podcast':
-				data = PodcastModel.get_all()
+				query_data = PodcastModel.get_all()
+				jsonified_data = podcast_schema.dump(query_data)
 			elif audioType == 'Audiobook':
-				data = AudiobookModel.get_all()
+				query_data = AudiobookModel.get_all()
+				jsonified_data = audiobook_schema.dump(query_data)
 			else:
 				return {}, HTTPStatus.BAD_REQUEST
 
-			return json.dumps(data), HTTPStatus.OK
+			return jsonified_data, HTTPStatus.OK
 
 		else:
 			if audioType == 'Song':
-				data = SongModel.get_by_id()
+				query_data = SongModel.get_by_id(audio_id)
+				jsonified_data = song_schema.dump(query_data)
 			elif audioType == 'Podcast':
-				data = PodcastModel.get_by_id()
+				query_data = PodcastModel.get_by_id(audio_id)
+				jsonified_data = podcast_schema.dump(query_data)
 			elif audioType == 'Audiobook':
-				data = AudiobookModel.get_by_id()
+				query_data = AudiobookModel.get_by_id(audio_id)
+				jsonified_data = audiobook_schema.dump(query_data)
 			else:
 				return {}, HTTPStatus.BAD_REQUEST
 
-			return json.dumps(data), HTTPStatus.OK
+			return jsonified_data, HTTPStatus.OK
 
 		return {}, HTTPStatus.BAD_REQUEST

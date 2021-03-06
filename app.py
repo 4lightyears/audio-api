@@ -1,12 +1,32 @@
 from flask import Flask
 from flask_restful import Api
+from flask_migrate import Migrate
 
-from resources.audio import AudioResource
+from extensions import db
 
-app = Flask(__name__)
-api = Api(app)
+from config import Config
 
-api.add_resource(AudioResource, '/audios')
+from resources.audio import AudioListResource, GetAudioResource
+
+def create_app():
+	app = Flask(__name__)
+	app.config.from_object(Config)
+
+	register_resource(app)
+	register_extension(app)
+
+	return app
+
+def register_extension(app):
+	db.init_app(app)
+	migrate = Migrate(app, db)
+
+def register_resource(app):
+	api = Api(app)
+
+	api.add_resource(AudioListResource, '/audio')
+	api.add_resource(GetAudioResource, '/<string:audioType>', '/<string:audioType>/<int:audio_id>', endpoint='aud')
 
 if __name__ == '__main__':
+    app = create_app()
     app.run(debug=True)
